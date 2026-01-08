@@ -6,6 +6,9 @@ from typing import Dict, List, Tuple, Optional
 from deepface import DeepFace
 import easyocr
 
+
+# ==================== CONFIGURATION ====================
+
 # Gender detection confidence
 GENDER_CONFIDENCE_THRESHOLD = 0.70
 
@@ -57,7 +60,7 @@ def get_ocr_reader():
     return _ocr_reader
 
 
-# UTILITY FUNCTIONS 
+# ==================== UTILITY FUNCTIONS ====================
 
 def extract_text_from_image(img_path: str) -> List[str]:
     """Extract text using OCR"""
@@ -82,7 +85,7 @@ def check_for_pii(texts: List[str]) -> Tuple[bool, str]:
     return False, None
 
 
-#  DEEPFACE COMPREHENSIVE ANALYSIS 
+# ==================== DEEPFACE COMPREHENSIVE ANALYSIS ====================
 
 def analyze_face_comprehensive(img_path: str) -> Dict:
     """
@@ -119,7 +122,7 @@ def analyze_face_comprehensive(img_path: str) -> Dict:
         }
 
 
-# PRIORITY 1: CRITICAL CHECKS (MUST PASS) 
+# ==================== PRIORITY 1: CRITICAL CHECKS (MUST PASS) ====================
 
 def validate_age(img_path: str, profile_age: int, face_data: Dict = None) -> Dict:
     """Age verification - CRITICAL CHECK"""
@@ -286,7 +289,7 @@ def check_text_and_pii(img_path: str) -> Dict:
         }
 
 
-# PRIORITY 2: HIGH IMPORTANCE CHECKS 
+# ==================== PRIORITY 2: HIGH IMPORTANCE CHECKS ====================
 
 def validate_gender(img_path: str, profile_gender: str, face_data: Dict = None) -> Dict:
     """Gender validation"""
@@ -441,7 +444,7 @@ def check_celebrity_database(img_path: str, celebrity_db_photos: List[str] = Non
         }
 
 
-# PRIORITY 3: STANDARD CHECKS 
+# ==================== PRIORITY 3: STANDARD CHECKS ====================
 
 def check_face_coverage(img_path: str, face_data: Dict = None) -> Dict:
     """Face coverage check"""
@@ -684,7 +687,7 @@ def detect_watermark(img_path: str) -> Dict:
     }
 
 
-#  OPTIMIZED MAIN VALIDATOR WITH EARLY EXIT 
+# ==================== OPTIMIZED MAIN VALIDATOR WITH EARLY EXIT ====================
 
 def stage2_validate_optimized(
     image_path: str,
@@ -722,7 +725,7 @@ def stage2_validate_optimized(
     if existing_photos is None:
         existing_photos = []
     
-    # SINGLE DEEPFACE ANALYSIS 
+    # ============= SINGLE DEEPFACE ANALYSIS =============
     print("Running comprehensive face analysis...")
     analysis = analyze_face_comprehensive(image_path)
     face_data = analysis["data"] if not analysis["error"] else None
@@ -734,7 +737,7 @@ def stage2_validate_optimized(
         results["early_exit"] = True
         return results
     
-    #  PRIORITY 1: CRITICAL CHECKS (EARLY EXIT ON FAIL ONLY) 
+    # ============= PRIORITY 1: CRITICAL CHECKS (EARLY EXIT ON FAIL ONLY) =============
 
     # 1. AGE CHECK (CRITICAL - Underage detection)
     print("[P1] Checking age...")
@@ -783,7 +786,7 @@ def stage2_validate_optimized(
                                      "duplicate", "enhancement", "photo_of_photo", "ai_generated", "watermark"]
         return results
 
-    #  PRIORITY 2: HIGH IMPORTANCE CHECKS (EARLY EXIT ON FAIL ONLY) 
+    # ============= PRIORITY 2: HIGH IMPORTANCE CHECKS (EARLY EXIT ON FAIL ONLY) =============
 
     # 4. GENDER CHECK
     print("[P2] Checking gender...")
@@ -830,7 +833,7 @@ def stage2_validate_optimized(
                                      "ai_generated", "watermark"]
         return results
     
-    #  PRIORITY 3: STANDARD CHECKS (CONTINUE ALL) 
+    # ============= PRIORITY 3: STANDARD CHECKS (CONTINUE ALL) =============
     # These checks run to completion for comprehensive reporting
     
     print("[P3] Running standard checks...")
@@ -859,7 +862,7 @@ def stage2_validate_optimized(
     results["checks"]["watermark"] = detect_watermark(image_path)
     results["checks_performed"].append("watermark")
     
-    #  FINAL DECISION LOGIC 
+    # ============= FINAL DECISION LOGIC =============
     
     fail_checks = []
     review_checks = []
@@ -917,7 +920,7 @@ def determine_rejection_action(fail_checks: List[str], all_checks: Dict) -> str:
     return "NUDGE_REUPLOAD_PROPER"
 
 
-# USAGE EXAMPLE 
+# ==================== USAGE EXAMPLE ====================
 
 if __name__ == "__main__":
     
