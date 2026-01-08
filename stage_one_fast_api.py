@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from typing import List
 import shutil
 import os
-import uuid
+import time
 
 from stage_one import stage1_validate
 
@@ -24,6 +24,7 @@ async def stage1_validate_batch(
     """
     Stage-1 batch validation for multiple images
     """
+    start_time = time.time()
 
     if not person_id.strip():
         raise HTTPException(status_code=400, detail="person_id is required")
@@ -43,8 +44,7 @@ async def stage1_validate_batch(
     results = []
 
     for file in files:
-        ext = os.path.splitext(file.filename)[1]
-        temp_filename = f"{person_id}_{uuid.uuid4()}{ext}"
+        temp_filename = file.filename
         temp_path = os.path.join(UPLOAD_DIR, temp_filename)
 
         try:
@@ -80,9 +80,13 @@ async def stage1_validate_batch(
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 
+    end_time = time.time()
+    response_time = round(end_time - start_time, 3)
+
     return {
         "person_id": person_id,
         "photo_type": photo_type,
         "total_images": len(files),
+        "response_time_seconds": response_time,
         "results": results
     }

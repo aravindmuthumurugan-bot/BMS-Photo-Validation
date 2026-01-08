@@ -2,6 +2,7 @@ import os
 import uuid
 import shutil
 import json
+import time
 import numpy as np
 from typing import List
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -73,6 +74,7 @@ def validate_multiple_images(
     """
     Upload multiple images and validate them in parallel with early exit
     """
+    start_time = time.time()
 
     try:
         profile_data = json.loads(profile_data)
@@ -113,9 +115,13 @@ def validate_multiple_images(
         except:
             pass
 
+    end_time = time.time()
+    response_time = round(end_time - start_time, 3)
+
     return JSONResponse({
         "total_images": len(files),
         "processed": len(results),
+        "response_time_seconds": response_time,
         "results": results
     })
 
