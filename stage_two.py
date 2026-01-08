@@ -3,6 +3,16 @@ import os
 import re
 import numpy as np
 from typing import Dict, List, Tuple, Optional
+import tensorflow as tf
+
+gpus = tf.config.list_physical_devices("GPU")
+if not gpus:
+    raise RuntimeError("❌ GPU NOT DETECTED")
+
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
+
+print("✅ TensorFlow GPU enabled:", gpus)
 from deepface import DeepFace
 import easyocr
 
@@ -52,25 +62,18 @@ DUPLICATE_THRESHOLD_REVIEW = 0.50
 _ocr_reader = None
 
 
-def get_ocr_reader():
-    """Get or initialize OCR reader (singleton)"""
-    global _ocr_reader
-    if _ocr_reader is None:
-        _ocr_reader = easyocr.Reader(['en'], gpu=True)
-    return _ocr_reader
-
+print(" Initializing EasyOCR on GPU...")
+OCR_READER = easyocr.Reader(['en'], gpu=True)
 
 # ==================== UTILITY FUNCTIONS ====================
 
 def extract_text_from_image(img_path: str) -> List[str]:
-    """Extract text using OCR"""
     try:
-        reader = get_ocr_reader()
-        results = reader.readtext(img_path)
-        texts = [text for (bbox, text, prob) in results if prob > 0.5]
-        return texts
+        results = OCR_READER.readtext(img_path)
+        return [text for (_, text, prob) in results if prob > 0.5]
     except:
         return []
+
 
 
 def check_for_pii(texts: List[str]) -> Tuple[bool, str]:

@@ -5,7 +5,7 @@ import json
 import time
 import numpy as np
 from typing import List
-from concurrent.futures import ProcessPoolExecutor, as_completed
+import tensorflow as tf
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import JSONResponse
@@ -17,8 +17,6 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = FastAPI(title="Stage 2 Photo Validation API - Optimized")
 
-# Tune based on CPU cores
-MAX_WORKERS = os.cpu_count() or 4
 
 
 def convert_to_native_types(obj):
@@ -52,6 +50,8 @@ def process_single_image(image_path: str, profile_data: dict):
         )
         # Convert NumPy types to native Python types
         result = convert_to_native_types(result)
+
+        tf.keras.backend.clear_session()
         
         return {
             "image": os.path.basename(image_path),
@@ -98,15 +98,10 @@ def validate_multiple_images(
 
     results = []
 
-    # Parallel processing
-    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = {
-            executor.submit(process_single_image, path, profile_data): path
-            for path in saved_paths
-        }
+    results = []
 
-        for future in as_completed(futures):
-            results.append(future.result())
+    for path in saved_paths:
+        results.append(process_single_image(path, profile_data))
 
     # Cleanup uploaded files
     for path in saved_paths:
@@ -125,7 +120,3 @@ def validate_multiple_images(
         "results": results
     })
 
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("fast_api_2_optimized:app", host="0.0.0.0", port=8000)
