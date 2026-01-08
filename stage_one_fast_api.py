@@ -4,7 +4,7 @@ import shutil
 import os
 import uuid
 
-from stage_1 import stage1_validate
+from stage_one import stage1_validate
 
 app = FastAPI(
     title="Stage-1 Image Sanity Check",
